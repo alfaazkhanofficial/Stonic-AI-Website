@@ -1,0 +1,16 @@
+node_modules
+.next
+out
+build
+coverage
+*.tsbuildinfo
+next-env.d.ts
+# Secrets: never commit. Real values live only in the hosting provider's secret manager.
+.env
+.env.*
+!.env.example
+.vercel
+.DS_Store
+
+.static-stash
+out
