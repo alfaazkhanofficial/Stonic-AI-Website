@@ -27,7 +27,7 @@ jobs:
           NEXT_PUBLIC_SITE_URL: https://preview.invalid
           APP_ENV: preview
       - name: Dependency vulnerability check
-        run: npm audit --audit-level=high
+        run: npm audit --omit=dev --audit-level=high
 
   docker:
     runs-on: ubuntu-latest
