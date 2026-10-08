@@ -1,0 +1,32 @@
+{
+  "updatedAt": "2026-10-08T11:47:15.617Z",
+  "announcement": {
+    "enabled": false,
+    "text": "",
+    "href": ""
+  },
+  "downloads": {
+    "version": "",
+    "releaseDate": "",
+    "notes": "",
+    "links": []
+  },
+  "seo": {
+    "title": "STONIC AI — Your computer is about to become intelligent",
+    "description": "STONIC Gen 1 is a personal AI that doesn't stop at answering. It plans, acts, observes and verifies."
+  },
+  "settings": {
+    "siteName": "STONIC AI",
+    "supportEmail": "",
+    "releaseStage": "released"
+  },
+  "featuredMedia": [
+    "1000418715-muzh1nyo.jpg"
+  ],
+  "socials": [],
+  "legal": {
+    "ownerName": "STONIC AI",
+    "governingLaw": "",
+    "effectiveDate": "October 8, 2026"
+  }
+}
