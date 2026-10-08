@@ -1,8 +1,8 @@
 {
-  "updatedAt": "2026-10-08T11:50:37.373Z",
+  "updatedAt": "2026-10-08T11:51:28.824Z",
   "announcement": {
-    "enabled": false,
-    "text": "",
+    "enabled": true,
+    "text": "Stonic Test",
     "href": ""
   },
   "downloads": {
