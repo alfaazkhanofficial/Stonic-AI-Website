@@ -1,7 +1,7 @@
 import { AdminForm } from "@/components/admin-form";
 import { AdminShell } from "@/components/admin-shell";
 import { requireAdmin } from "@/lib/admin-session";
-import { getContent } from "@/lib/site-content";
+import { getAdminContent } from "@/lib/site-content";
 import { saveContentAction } from "../actions";
 
 export const dynamic = "force-dynamic";
@@ -34,7 +34,7 @@ const Field = ({
 
 export default async function ContentPage() {
   await requireAdmin();
-  const c = await getContent();
+  const c = await getAdminContent();
   const links = [0, 1, 2, 3].map(
     (i) => c.downloads.links[i] ?? { label: "", platform: "", url: "" },
   );

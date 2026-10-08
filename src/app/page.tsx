@@ -1,8 +1,9 @@
 import * as S from "@/sections/home";
-import { getContent } from "@/lib/site-content";
+import { getRelease } from "@/lib/release";
 
 export default async function Home() {
-  const { settings, featuredMedia } = await getContent();
+  const { content, screenshots } = await getRelease();
+  const { settings } = content;
   const stage = settings.releaseStage;
   return (
     <>
@@ -18,7 +19,7 @@ export default async function Home() {
       <S.Capabilities />
       <S.ParallelWork />
       <S.Ecosystem />
-      <S.RealProduct media={featuredMedia} />
+      <S.RealProduct media={screenshots} />
       <S.BuiltDifferent />
       <S.Technology />
       <S.Gen1 stage={stage} />

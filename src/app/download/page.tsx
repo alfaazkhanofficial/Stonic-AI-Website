@@ -1,69 +1,64 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { DownloadButton, InstallerCard, NotUploadedHint, VerifyHelp } from "@/components/downloads";
 import { ButtonLink, PageHero } from "@/components/ui";
-import { getContent } from "@/lib/site-content";
+import { SYSTEM_REQUIREMENTS } from "@/content/releases";
+import { getRelease, installersFor } from "@/lib/release";
 
-export const metadata: Metadata = {
-  title: "Download",
-  description: "Download STONIC Gen 1 when it is released.",
-};
+export const metadata: Metadata = { title: "Download", description: "Download STONIC Gen 1." };
 
 export default async function Page() {
-  const { downloads, settings } = await getContent();
-  const ready = settings.releaseStage === "released" && downloads.links.length > 0;
+  const { installers, latest } = await getRelease();
+  const files = latest ? installersFor(latest, installers, true) : installers;
+  const primary = files.find((f) => f.platform === "Windows") ?? files[0];
   return (
     <>
       <PageHero
         eyebrow="Download"
-        title={ready ? "Get STONIC Gen 1." : "Gen 1 isn't released yet."}
+        title="Get STONIC Gen 1."
         lede={
-          ready
-            ? `Version ${downloads.version || "—"}${downloads.releaseDate ? ` · ${downloads.releaseDate}` : ""}`
-            : "There is nothing to download yet. When Gen 1 ships, the installers will appear here."
+          latest ? `Version ${latest.version}${latest.date ? ` · ${latest.date}` : ""}` : undefined
         }
-      />
+      >
+        <div className="btn-row">
+          <DownloadButton file={primary} />
+          <ButtonLink href="/releases">All releases</ButtonLink>
+        </div>
+        {!primary && <NotUploadedHint />}
+      </PageHero>
       <section className="section">
-        <div className="container prose">
-          {ready ? (
-            <>
-              {downloads.notes && <p>{downloads.notes}</p>}
-              <div className="grid" style={{ marginTop: "1.5rem" }}>
-                {downloads.links.map((l) => (
-                  <div
-                    className="card"
-                    key={l.url}
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      gap: "1rem",
-                      flexWrap: "wrap",
-                    }}
-                  >
-                    <div>
-                      <h2 className="h3">{l.label}</h2>
-                      {l.platform && <p>{l.platform}</p>}
-                    </div>
-                    <ButtonLink href={l.url} variant="primary">
-                      Download
-                    </ButtonLink>
-                  </div>
-                ))}
-              </div>
-            </>
-          ) : (
-            <>
-              <p className="notice">
-                We won&apos;t show a download button for something that doesn&apos;t exist. Check
-                the roadmap for where Gen 1 stands.
-              </p>
-              <div className="btn-row" style={{ marginTop: "1.5rem" }}>
-                <ButtonLink href="/roadmap" variant="primary">
-                  View roadmap
-                </ButtonLink>
-                <ButtonLink href="/support">Contact support</ButtonLink>
-              </div>
-            </>
-          )}
+        <div className="container split" style={{ alignItems: "start" }}>
+          <div className="grid">
+            <h2 className="sr-only">Installers</h2>
+            {files.map((f) => (
+              <InstallerCard key={f.url} file={f} />
+            ))}
+            {files.length > 0 && <VerifyHelp />}
+            <p className="muted" style={{ fontSize: "0.92rem" }}>
+              By downloading you agree to the{" "}
+              <Link href="/license" style={{ color: "var(--c1)" }}>
+                license
+              </Link>{" "}
+              and{" "}
+              <Link href="/terms" style={{ color: "var(--c1)" }}>
+                terms
+              </Link>
+              .
+            </p>
+          </div>
+          <div className="prose">
+            <h2 style={{ marginTop: 0 }}>System requirements</h2>
+            <ul className="req">
+              {SYSTEM_REQUIREMENTS.map((r) => (
+                <li key={r}>{r}</li>
+              ))}
+            </ul>
+            <h2>Need help installing?</h2>
+            <p>
+              Read the <Link href="/documentation">documentation</Link> or{" "}
+              <Link href="/contact">contact us</Link>.
+            </p>
+          </div>
         </div>
       </section>
     </>

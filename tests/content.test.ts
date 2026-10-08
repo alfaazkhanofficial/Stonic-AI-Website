@@ -53,10 +53,13 @@ describe("sanitizeContent", () => {
       sanitizeContent({ featuredMedia: ["ok-1.png", "../etc/passwd", "x.exe", 5] }).featuredMedia,
     ).toEqual(["ok-1.png"]);
   });
-  it("defaults release stage to in-development", () => {
+  it("defaults release stage to released and honours in-development", () => {
     expect(sanitizeContent({ settings: { releaseStage: "bogus" } }).settings.releaseStage).toBe(
-      "in-development",
+      "released",
     );
+    expect(
+      sanitizeContent({ settings: { releaseStage: "in-development" } }).settings.releaseStage,
+    ).toBe("in-development");
   });
 });
 
@@ -99,9 +102,96 @@ describe("static content file", () => {
   it("ships valid, safe defaults", async () => {
     const { STATIC_CONTENT } = await import("../src/content/site");
     const c = sanitizeContent(STATIC_CONTENT);
-    expect(c.settings.releaseStage).toBe("in-development");
+    expect(c.settings.releaseStage).toBe("released");
     expect(c.downloads.links).toEqual([]);
     expect(c.featuredMedia).toEqual([]);
     expect(c.seo.title.length).toBeGreaterThan(0);
+  });
+});
+
+import { mergeContent } from "../src/lib/site-content";
+import { GithubStore, githubConfig } from "../src/lib/github-store";
+
+describe("mergeContent", () => {
+  it("overlays objects one level deep and replaces arrays", () => {
+    const m = mergeContent(
+      {
+        settings: { siteName: "A", supportEmail: "" },
+        featuredMedia: ["a.png"],
+        seo: { title: "t" },
+      },
+      { settings: { supportEmail: "x@y.co" }, featuredMedia: ["b.png"] },
+    ) as { settings: Record<string, string>; featuredMedia: string[]; seo: { title: string } };
+    expect(m.settings).toEqual({ siteName: "A", supportEmail: "x@y.co" });
+    expect(m.featuredMedia).toEqual(["b.png"]);
+    expect(m.seo.title).toBe("t");
+  });
+  it("tolerates garbage", () => {
+    expect(mergeContent(null, "x")).toEqual({});
+  });
+});
+
+describe("GitHub store", () => {
+  it("rejects incomplete or malformed config", () => {
+    expect(githubConfig({} as NodeJS.ProcessEnv)).toBeNull();
+    expect(
+      githubConfig({
+        GITHUB_TOKEN: "t",
+        GITHUB_REPO: "not a repo",
+      } as unknown as NodeJS.ProcessEnv),
+    ).toBeNull();
+    expect(
+      githubConfig({ GITHUB_TOKEN: "t", GITHUB_REPO: "me/site" } as unknown as NodeJS.ProcessEnv)
+        ?.branch,
+    ).toBe("main");
+  });
+  it("creates, updates (with sha), lists and deletes via the Contents API", async () => {
+    const files = new Map<string, { sha: string; content: string }>();
+    const calls: string[] = [];
+    const fake = (async (url: string, init: RequestInit = {}) => {
+      const u = new URL(url);
+      const p = decodeURIComponent(u.pathname.split("/contents/")[1] ?? "");
+      const method = init.method ?? "GET";
+      calls.push(`${method} ${p}`);
+      expect((init.headers as Record<string, string>).Authorization).toBe("Bearer tok");
+      const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { status });
+      if (method === "GET") {
+        const f = files.get(p);
+        if (f) return json({ sha: f.sha, content: f.content, type: "file" });
+        const dir = [...files.keys()].filter((k) => k.startsWith(p + "/"));
+        return dir.length
+          ? json(dir.map((k) => ({ name: k.split("/").pop(), size: 3, sha: "s", type: "file" })))
+          : json({}, 404);
+      }
+      const body = JSON.parse(String(init.body));
+      if (method === "PUT") {
+        const existing = files.get(p);
+        if (existing && body.sha !== existing.sha) return json({}, 409);
+        files.set(p, { sha: `sha${files.size}${Date.now()}`, content: body.content });
+        return json({}, existing ? 200 : 201);
+      }
+      if (method === "DELETE") {
+        if (files.get(p)?.sha !== body.sha) return json({}, 409);
+        files.delete(p);
+        return json({});
+      }
+      return json({}, 400);
+    }) as unknown as typeof fetch;
+    const s = new GithubStore({ token: "tok", repo: "me/site", branch: "main" }, fake);
+    await s.putFile("content/site.json", '{"a":1}', "m");
+    await s.putFile("content/site.json", '{"a":2}', "m"); // update path uses current sha
+    expect((await s.getFile("content/site.json"))!.bytes.toString()).toBe('{"a":2}');
+    await s.putFile("public/media/x.png", new Uint8Array([1, 2, 3]), "m");
+    expect((await s.list("public/media")).map((f) => f.name)).toEqual(["x.png"]);
+    await s.deleteFile("public/media/x.png", "m");
+    expect(await s.list("public/media")).toEqual([]);
+    expect(await s.getFile("nope.json")).toBeNull();
+    expect(calls.length).toBeGreaterThan(5);
+  });
+  it("surfaces write failures", async () => {
+    const fake = (async (_u: string, init: RequestInit = {}) =>
+      new Response("{}", { status: init.method === "PUT" ? 403 : 404 })) as unknown as typeof fetch;
+    const s = new GithubStore({ token: "t", repo: "a/b", branch: "main" }, fake);
+    await expect(s.putFile("x", "y", "m")).rejects.toThrow("403");
   });
 });

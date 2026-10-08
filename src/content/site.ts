@@ -11,7 +11,7 @@ export const STATIC_CONTENT: Partial<SiteContent> = {
   settings: {
     siteName: "STONIC AI",
     supportEmail: "", // e.g. "support@yourdomain.com" — shown on Support, Security and the footer
-    releaseStage: "in-development", // change to "released" on release day
+    releaseStage: "released", // "released" or "in-development"
   },
   announcement: {
     enabled: false,
@@ -31,7 +31,15 @@ export const STATIC_CONTENT: Partial<SiteContent> = {
     description:
       "STONIC Gen 1 is a personal AI that doesn't stop at answering. It plans, acts, observes and verifies.",
   },
-  // Real Gen 1 screenshots/recordings: put the files in public/media/ and list the exact file names here
-  // (png, jpg, webp, avif, gif, mp4, webm; lowercase letters, numbers, dot, dash, underscore). Max 6.
+  // Screenshots/recordings and the installer are DETECTED AUTOMATICALLY from public/media/ — no need to list them.
+  // (Optional) list extra file names here to force them into the gallery.
   featuredMedia: [],
+  // Optional social links shown on the Contact page: { label: "YouTube", url: "https://youtube.com/@yourchannel" }
+  socials: [],
+  // Used by the License, Terms and Privacy pages.
+  legal: {
+    ownerName: "STONIC AI", // the legal name of the licensor (person or company)
+    governingLaw: "", // e.g. "Pakistan" — leave "" to use the generic clause
+    effectiveDate: "October 8, 2026",
+  },
 };

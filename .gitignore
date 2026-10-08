@@ -14,5 +14,3 @@ next-env.d.ts
 
 .static-stash
 out
-
-.open-next

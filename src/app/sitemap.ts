@@ -13,6 +13,7 @@ const PATHS = [
   "/documentation",
   "/security",
   "/support",
+  "/contact",
   "/privacy",
   "/terms",
   "/license",

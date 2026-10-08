@@ -1,14 +1,14 @@
 import { AdminForm } from "@/components/admin-form";
 import { AdminShell } from "@/components/admin-shell";
 import { requireAdmin } from "@/lib/admin-session";
-import { getContent } from "@/lib/site-content";
+import { getAdminContent } from "@/lib/site-content";
 import { saveSettingsAction } from "../actions";
 
 export const dynamic = "force-dynamic";
 
 export default async function SettingsPage() {
   await requireAdmin();
-  const { settings } = await getContent();
+  const { settings } = await getAdminContent();
   return (
     <AdminShell current="/admin/settings" title="Settings">
       <AdminForm action={saveSettingsAction}>

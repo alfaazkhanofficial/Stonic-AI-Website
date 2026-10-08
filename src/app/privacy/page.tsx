@@ -1,43 +1,27 @@
 import type { Metadata } from "next";
-import { PageHero } from "@/components/ui";
+import { LegalPage } from "@/components/legal-page";
+import { privacySections } from "@/content/legal";
+import { getContent } from "@/lib/site-content";
 
 export const metadata: Metadata = {
   title: "Privacy",
-  description: "How this website handles your data.",
+  description: "How information is handled on this website and in STONIC.",
 };
 
-export default function Page() {
+export default async function Page() {
+  const { legal, settings } = await getContent();
+  const ctx = {
+    owner: legal.ownerName,
+    email: settings.supportEmail,
+    law: legal.governingLaw,
+    effective: legal.effectiveDate,
+  };
   return (
-    <>
-      <PageHero eyebrow="Legal" title="Privacy" lede="Last updated October 2026." />
-      <section className="section">
-        <div className="container prose">
-          <h2>What this website collects</h2>
-          <p>
-            We do not run analytics, advertising or tracking scripts on this website, and we set no
-            cookies for visitors. Our hosting provider keeps standard server logs (such as IP
-            address, requested page and time) for security and reliability.
-          </p>
-          <h2>Email</h2>
-          <p>
-            If you email us, we use your message and address only to reply and to improve STONIC.
-          </p>
-          <h2>Administrators</h2>
-          <p>
-            Authorized maintainers receive a secure session cookie that is used only to keep them
-            signed in to the admin area.
-          </p>
-          <h2>The STONIC application</h2>
-          <p>
-            How the application handles data will be described in its own privacy information at
-            release.
-          </p>
-          <h2>Contact</h2>
-          <p>
-            Use the details on the <a href="/support">support page</a> for any privacy question.
-          </p>
-        </div>
-      </section>
-    </>
+    <LegalPage
+      title="Privacy"
+      lede="How information is handled on this website and in STONIC."
+      effective={legal.effectiveDate}
+      sections={privacySections(ctx)}
+    />
   );
 }

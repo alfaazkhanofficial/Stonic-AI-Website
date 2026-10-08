@@ -4,16 +4,35 @@ import { requireAdmin } from "@/lib/admin-session";
 import { adminConfig } from "@/lib/auth";
 import { appEnv } from "@/lib/env";
 import { listMedia } from "@/lib/media";
-import { getContent } from "@/lib/site-content";
+import { scanMediaFolder } from "@/lib/media-scan";
+import { storageMode } from "@/lib/env";
+import { githubConfig } from "@/lib/github-store";
+import { getAdminContent } from "@/lib/site-content";
 
 export const dynamic = "force-dynamic";
 
 export default async function Dashboard() {
   await requireAdmin();
-  const [c, media] = await Promise.all([getContent(), listMedia()]);
+  const [c, media] = await Promise.all([getAdminContent(), listMedia()]);
+  const scanned = scanMediaFolder();
   const stats: [string, string][] = [
     ["Environment", appEnv],
     ["Release stage", c.settings.releaseStage === "released" ? "Released" : "In development"],
+    [
+      "Storage",
+      storageMode === "github"
+        ? githubConfig()
+          ? "GitHub (connected)"
+          : "GitHub (NOT configured)"
+        : "Server disk",
+    ],
+    [
+      "Installer detected",
+      scanned.installers.length > 0
+        ? `Yes (${scanned.installers.map((i) => i.name).join(", ")})`
+        : "No: download button is greyed",
+    ],
+    ["Screenshots detected", String(scanned.screenshots.length)],
     ["Download links", String(c.downloads.links.length)],
     ["Media files", `${media.length} (${c.featuredMedia.length} featured)`],
     ["Announcement", c.announcement.enabled ? "Showing" : "Off"],

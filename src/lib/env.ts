@@ -19,6 +19,8 @@ export const siteUrl: string = parseSiteUrl(process.env.NEXT_PUBLIC_SITE_URL);
 export const isProduction = appEnv === "production";
 /** True for the free static-hosting build (`npm run build:static`): no server, content comes from src/content/site.ts. */
 export const isStaticTarget = process.env.DEPLOY_TARGET === "static";
+/** "github": admin commits content/media to the GitHub repo (free hosting). "disk": admin writes to DATA_DIR (needs a persistent disk). */
+export const storageMode: "github" | "disk" = process.env.STORAGE === "github" ? "github" : "disk";
 export const isSecureOrigin = siteUrl.startsWith("https:");
 
 /** Server-only. Directory for admin-managed content and uploads (mount a persistent volume here). */

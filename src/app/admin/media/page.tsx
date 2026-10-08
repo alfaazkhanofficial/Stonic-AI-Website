@@ -1,16 +1,17 @@
-import Image from "next/image";
+/* eslint-disable @next/next/no-img-element -- admin previews of uploaded files, no optimization needed */
 import { AdminForm } from "@/components/admin-form";
 import { AdminShell } from "@/components/admin-shell";
 import { requireAdmin } from "@/lib/admin-session";
 import { isVideo, listMedia } from "@/lib/media";
-import { getContent } from "@/lib/site-content";
+import { storageMode } from "@/lib/env";
+import { getAdminContent } from "@/lib/site-content";
 import { deleteMediaAction, toggleFeaturedAction, uploadMediaAction } from "../actions";
 
 export const dynamic = "force-dynamic";
 
 export default async function MediaPage() {
   await requireAdmin();
-  const [media, c] = await Promise.all([listMedia(), getContent()]);
+  const [media, c] = await Promise.all([listMedia(), getAdminContent()]);
   return (
     <AdminShell current="/admin/media" title="Media">
       <div className="panel">
@@ -35,6 +36,13 @@ export default async function MediaPage() {
       </div>
       <div className="panel">
         <h2>Library ({media.length})</h2>
+        {storageMode === "github" && (
+          <p className="hint" style={{ marginBottom: "1rem" }}>
+            Changes are committed to GitHub and go live after the next deploy (about a minute).
+            Installers (.exe, .msi, .dmg, …) are added by uploading them to{" "}
+            <code>public/media</code> in the repo.
+          </p>
+        )}
         {media.length === 0 ? (
           <p className="muted">Nothing uploaded yet.</p>
         ) : (
@@ -46,7 +54,7 @@ export default async function MediaPage() {
                   {isVideo(m.name) ? (
                     <video src={`/media/${m.name}`} muted preload="metadata" />
                   ) : (
-                    <Image src={`/media/${m.name}`} alt="" width={72} height={54} unoptimized />
+                    <img src={`/media/${m.name}`} alt="" />
                   )}
                   <div className="meta">
                     <b>{m.name}</b>

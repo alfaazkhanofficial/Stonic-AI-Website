@@ -1,6 +1,7 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
-import { dataDir } from "./env";
+import { dataDir, storageMode } from "./env";
+import { githubStore } from "./github-store";
 import { isMediaName } from "./site-content";
 
 export const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
@@ -62,7 +63,20 @@ export function sanitizeFilename(original: string): string | null {
 
 const uploads = () => path.join(dataDir(), "uploads");
 
+const REPO_MEDIA_DIR = "public/media";
+
 export async function listMedia(): Promise<{ name: string; size: number }[]> {
+  if (storageMode === "github") {
+    const store = githubStore();
+    if (!store) return [];
+    try {
+      return (await store.list(REPO_MEDIA_DIR))
+        .filter((f) => isMediaName(f.name))
+        .sort((a, b) => b.name.localeCompare(a.name));
+    } catch {
+      return [];
+    }
+  }
   try {
     const names = (await fs.readdir(uploads())).filter(isMediaName);
     const items = await Promise.all(
@@ -76,6 +90,12 @@ export async function listMedia(): Promise<{ name: string; size: number }[]> {
 
 export async function saveMedia(name: string, bytes: Uint8Array): Promise<void> {
   if (!isMediaName(name)) throw new Error("Invalid filename");
+  if (storageMode === "github") {
+    const store = githubStore();
+    if (!store) throw new Error("GitHub storage is not configured (GITHUB_TOKEN / GITHUB_REPO).");
+    await store.putFile(`${REPO_MEDIA_DIR}/${name}`, bytes, `Admin: upload ${name}`);
+    return;
+  }
   await fs.mkdir(uploads(), { recursive: true });
   await fs.writeFile(path.join(uploads(), name), bytes, { mode: 0o600 });
 }
@@ -91,5 +111,9 @@ export async function readMedia(name: string): Promise<Buffer | null> {
 
 export async function deleteMedia(name: string): Promise<void> {
   if (!isMediaName(name)) return;
+  if (storageMode === "github") {
+    await githubStore()?.deleteFile(`${REPO_MEDIA_DIR}/${name}`, `Admin: delete ${name}`);
+    return;
+  }
   await fs.rm(path.join(uploads(), name), { force: true });
 }

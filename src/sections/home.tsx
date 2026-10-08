@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { HeroCanvas } from "@/components/hero-canvas";
 import { Reveal } from "@/components/reveal";
@@ -13,7 +12,7 @@ import {
   VoiceWave,
 } from "@/components/visuals";
 import { CAPABILITIES } from "@/content/capabilities";
-import { isVideo } from "@/lib/media";
+import { isVideoFile } from "@/lib/media-scan";
 import type { SiteContent } from "@/lib/site-content";
 
 /** 01 Hero */
@@ -323,6 +322,7 @@ export function Capabilities() {
           className="hscroll"
           role="region"
           aria-label="Capabilities, scroll horizontally"
+          tabIndex={0}
         >
           {CAPABILITIES.map((c, i) => (
             <article key={c.id} className="card cap-card">
@@ -423,23 +423,21 @@ export function RealProduct({ media }: { media: string[] }) {
             {media.map((name, i) => (
               <Reveal key={name} delay={i % 3}>
                 <div className="media-frame">
-                  {isVideo(name) ? (
+                  {isVideoFile(name) ? (
                     <video
-                      src={`/media/${name}`}
+                      src={`/media/${encodeURIComponent(name)}`}
                       controls
                       preload="metadata"
                       playsInline
                       aria-label="STONIC Gen 1 recording"
-                    >
-                    </video>
+                    />
                   ) : (
-                    <Image
-                      src={`/media/${name}`}
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={`/media/${encodeURIComponent(name)}`}
                       alt="STONIC Gen 1 screenshot"
-                      width={1280}
-                      height={720}
                       loading="lazy"
-                      unoptimized
+                      decoding="async"
                     />
                   )}
                 </div>

@@ -22,6 +22,7 @@ const pages = [
   "/documentation",
   "/security",
   "/support",
+  "/contact",
   "/privacy",
   "/terms",
   "/license",

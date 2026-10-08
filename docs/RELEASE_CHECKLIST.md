@@ -42,6 +42,15 @@ Legend: ✅ verified in this repo · 🔧 needs you / a live environment
 - ✅ Accessibility: axe (WCAG 2.x A/AA + best practice), 0 violations on all pages, desktop + mobile
 - 🔧 HTTPS/HSTS only observable on the real domain
 
+## Final version (this build)
+
+- ✅ All capabilities Available; License (proprietary), Terms, Privacy, Documentation, Security, Support, Contact, Releases, Download all live
+- ✅ Download buttons greyed with no installer; enabled automatically with one (checksum verified against the real file in a browser test)
+- ✅ Admin in GitHub mode verified end to end against a GitHub Contents-API stand-in (commits for content, upload, feature, delete; auth + upload checks intact)
+- ✅ axe: 0 violations on all 17 pages, desktop + mobile
+- 🔧 Verify GitHub mode once against real GitHub (token, repo) and confirm Vercel redeploys after a commit
+- 🔧 Real UI screenshots + installer into `public/media/`; confirm system requirements; legal review
+
 ## Free static deployment
 
 - ✅ `build:static` verified: 14 pages + 404, sitemap, robots, OG image, `_headers`, content/media from `site.ts` and `public/media`, unsafe URLs and path-traversal names dropped

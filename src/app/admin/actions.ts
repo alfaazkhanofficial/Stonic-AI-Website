@@ -15,7 +15,7 @@ import {
   sanitizeFilename,
   saveMedia,
 } from "@/lib/media";
-import { getContent, isMediaName, safeEmail, saveContent } from "@/lib/site-content";
+import { getAdminContent, isMediaName, safeEmail, saveContent } from "@/lib/site-content";
 
 export type FormState = { ok?: string; error?: string };
 
@@ -70,7 +70,7 @@ export async function logoutAction() {
 /* ---------------- Content ---------------- */
 export async function saveContentAction(_prev: FormState, fd: FormData): Promise<FormState> {
   await requireAdmin();
-  const cur = await getContent();
+  const cur = await getAdminContent();
   const links = [0, 1, 2, 3].map((i) => ({
     label: str(fd, `link${i}_label`, 60),
     platform: str(fd, `link${i}_platform`, 40),
@@ -92,7 +92,7 @@ export async function saveContentAction(_prev: FormState, fd: FormData): Promise
     },
     seo: { title: str(fd, "seo_title", 70), description: str(fd, "seo_description", 200) },
   });
-  const saved = await getContent();
+  const saved = await getAdminContent();
   refresh();
   const dropped = hadLinks.length - saved.downloads.links.length;
   return dropped > 0
@@ -106,7 +106,7 @@ export async function saveSettingsAction(_prev: FormState, fd: FormData): Promis
   await requireAdmin();
   const email = str(fd, "supportEmail", 200).trim();
   if (email && !safeEmail(email)) return { error: "Enter a valid support email address." };
-  const cur = await getContent();
+  const cur = await getAdminContent();
   await saveContent({
     ...cur,
     settings: {
@@ -140,7 +140,7 @@ export async function toggleFeaturedAction(fd: FormData) {
   await requireAdmin();
   const name = str(fd, "name", 200);
   if (!isMediaName(name)) return;
-  const cur = await getContent();
+  const cur = await getAdminContent();
   const on = cur.featuredMedia.includes(name);
   await saveContent({
     ...cur,
@@ -153,7 +153,7 @@ export async function deleteMediaAction(fd: FormData) {
   await requireAdmin();
   const name = str(fd, "name", 200);
   if (!isMediaName(name)) return;
-  const cur = await getContent();
+  const cur = await getAdminContent();
   await deleteMedia(name);
   await saveContent({ ...cur, featuredMedia: cur.featuredMedia.filter((m) => m !== name) });
   refresh();

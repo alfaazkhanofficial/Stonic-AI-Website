@@ -1,8 +1,9 @@
-import { promises as fs } from "node:fs";
+import { readFileSync, promises as fs } from "node:fs";
 import path from "node:path";
 import { connection } from "next/server";
 import { STATIC_CONTENT } from "../content/site";
-import { dataDir, isStaticTarget } from "./env";
+import { dataDir, isStaticTarget, storageMode } from "./env";
+import { githubStore } from "./github-store";
 
 export type DownloadLink = { label: string; platform: string; url: string };
 
@@ -13,6 +14,8 @@ export type SiteContent = {
   seo: { title: string; description: string };
   settings: { siteName: string; supportEmail: string; releaseStage: "in-development" | "released" };
   featuredMedia: string[];
+  socials: { label: string; url: string }[];
+  legal: { ownerName: string; governingLaw: string; effectiveDate: string };
 };
 
 export const DEFAULT_CONTENT: SiteContent = {
@@ -24,14 +27,16 @@ export const DEFAULT_CONTENT: SiteContent = {
     description:
       "STONIC Gen 1 is a personal AI that doesn't stop at answering. It plans, acts, observes and verifies.",
   },
-  settings: { siteName: "STONIC AI", supportEmail: "", releaseStage: "in-development" },
+  settings: { siteName: "STONIC AI", supportEmail: "", releaseStage: "released" },
   featuredMedia: [],
+  socials: [],
+  legal: { ownerName: "STONIC AI", governingLaw: "", effectiveDate: "October 8, 2026" },
 };
 
 const clean = (v: unknown, max: number): string =>
   typeof v === "string"
     ? v
-        .replace(/\p{Cc}/gu, " ")
+        .replace(/[\u0000-\u001f\u007f]/g, " ")
         .trim()
         .slice(0, max)
     : "";
@@ -66,6 +71,7 @@ export function sanitizeContent(input: unknown): SiteContent {
   const d = obj("downloads");
   const s = obj("seo");
   const st = obj("settings");
+  const lg = obj("legal");
   const links = Array.isArray(d.links) ? d.links : [];
   return {
     updatedAt: typeof r.updatedAt === "string" ? r.updatedAt : null,
@@ -97,20 +103,64 @@ export function sanitizeContent(input: unknown): SiteContent {
     settings: {
       siteName: clean(st.siteName, 40) || DEFAULT_CONTENT.settings.siteName,
       supportEmail: safeEmail(st.supportEmail),
-      releaseStage: st.releaseStage === "released" ? "released" : "in-development",
+      releaseStage: st.releaseStage === "in-development" ? "in-development" : "released",
     },
     featuredMedia: (Array.isArray(r.featuredMedia) ? r.featuredMedia : [])
       .filter((m): m is string => typeof m === "string" && isMediaName(m))
       .slice(0, 6),
+    socials: (Array.isArray(r.socials) ? r.socials : [])
+      .slice(0, 6)
+      .map((x) => {
+        const o = (x && typeof x === "object" ? x : {}) as Record<string, unknown>;
+        return { label: clean(o.label, 40), url: safeUrl(o.url) };
+      })
+      .filter((x) => x.label && x.url),
+    legal: {
+      ownerName: clean(lg.ownerName, 100) || DEFAULT_CONTENT.legal.ownerName,
+      governingLaw: clean(lg.governingLaw, 120),
+      effectiveDate: clean(lg.effectiveDate, 40) || DEFAULT_CONTENT.legal.effectiveDate,
+    },
   };
 }
 
 const file = () => path.join(dataDir(), "site.json");
+export const REPO_CONTENT_PATH = "content/site.json";
+
+/** Shallow per-section merge: overlay wins, objects merge one level deep, arrays are replaced. */
+export function mergeContent(base: unknown, overlay: unknown): Record<string, unknown> {
+  const b = (base && typeof base === "object" ? base : {}) as Record<string, unknown>;
+  const o = (overlay && typeof overlay === "object" ? overlay : {}) as Record<string, unknown>;
+  const out: Record<string, unknown> = { ...b };
+  for (const [k, v] of Object.entries(o)) {
+    const bv = b[k];
+    out[k] =
+      v &&
+      typeof v === "object" &&
+      !Array.isArray(v) &&
+      bv &&
+      typeof bv === "object" &&
+      !Array.isArray(bv)
+        ? { ...(bv as object), ...(v as object) }
+        : v;
+  }
+  return out;
+}
+
+/** Content baked in at build time: src/content/site.ts overlaid by the committed content/site.json (if any). */
+function buildTimeContent(): SiteContent {
+  let overlay: unknown = {};
+  try {
+    overlay = JSON.parse(readFileSync(path.join(process.cwd(), REPO_CONTENT_PATH), "utf8"));
+  } catch {
+    /* no committed overlay yet */
+  }
+  return sanitizeContent(mergeContent(STATIC_CONTENT, overlay));
+}
 
 export async function getContent(): Promise<SiteContent> {
-  // Static (free-hosting) build: content is the file src/content/site.ts, baked in at build time.
-  if (isStaticTarget) return sanitizeContent(STATIC_CONTENT);
-  // Server build: opt out of prerendering so admin edits show up immediately.
+  // Static and GitHub-backed builds: content is fixed at build time (pages stay fully static / fast / free).
+  if (isStaticTarget || storageMode === "github") return buildTimeContent();
+  // Disk build: opt out of prerendering so admin edits show up immediately.
   await connection();
   try {
     return sanitizeContent(JSON.parse(await fs.readFile(file(), "utf8")));
@@ -119,8 +169,38 @@ export async function getContent(): Promise<SiteContent> {
   }
 }
 
+/** Admin view: always the freshest saved content (in GitHub mode: straight from the repo, before the redeploy lands). */
+export async function getAdminContent(): Promise<SiteContent> {
+  if (storageMode === "github") {
+    const store = githubStore();
+    if (store) {
+      try {
+        const f = await store.getFile(REPO_CONTENT_PATH);
+        if (f)
+          return sanitizeContent(
+            mergeContent(STATIC_CONTENT, JSON.parse(f.bytes.toString("utf8"))),
+          );
+      } catch {
+        /* fall back to the deployed snapshot */
+      }
+    }
+    return buildTimeContent();
+  }
+  return getContent();
+}
+
 export async function saveContent(next: SiteContent): Promise<void> {
   const value = sanitizeContent({ ...next, updatedAt: new Date().toISOString() });
+  if (storageMode === "github") {
+    const store = githubStore();
+    if (!store) throw new Error("GitHub storage is not configured (GITHUB_TOKEN / GITHUB_REPO).");
+    await store.putFile(
+      REPO_CONTENT_PATH,
+      JSON.stringify(value, null, 2) + "\n",
+      "Admin: update site content",
+    );
+    return;
+  }
   await fs.mkdir(dataDir(), { recursive: true });
   const tmp = `${file()}.${process.pid}.tmp`;
   await fs.writeFile(tmp, JSON.stringify(value, null, 2), { mode: 0o600 });

@@ -4,7 +4,7 @@ export const NAV = [
   { href: "/agents", label: "Agents" },
   { href: "/ecosystem", label: "Ecosystem" },
   { href: "/gen-1", label: "Gen 1" },
-  { href: "/roadmap", label: "Roadmap" },
+  { href: "/releases", label: "Releases" },
 ] as const;
 
 export const FOOTER = {
@@ -17,12 +17,14 @@ export const FOOTER = {
   Gen1: [
     { href: "/gen-1", label: "STONIC Gen 1" },
     { href: "/download", label: "Download" },
+    { href: "/releases", label: "Releases" },
     { href: "/roadmap", label: "Roadmap" },
     { href: "/documentation", label: "Documentation" },
   ],
   Company: [
     { href: "/security", label: "Security" },
     { href: "/support", label: "Support" },
+    { href: "/contact", label: "Contact" },
   ],
   Legal: [
     { href: "/privacy", label: "Privacy" },

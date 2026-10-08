@@ -37,8 +37,8 @@ export default async function Page() {
               "Gen 1 is focused on your computer. Phone and cloud are concepts beyond it.",
             ],
             [
-              "Honest status",
-              "This site marks every capability Planned or Available, and shows only real product media.",
+              "Real media only",
+              "Screenshots and recordings on this site are of the real application, never mockups.",
             ],
           ].map(([t, b], i) => (
             <Reveal key={t} delay={i}>

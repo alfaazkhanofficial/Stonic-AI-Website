@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { ButtonLink, PageHero } from "@/components/ui";
 import { getContent } from "@/lib/site-content";
 
@@ -10,23 +11,37 @@ export default async function Page() {
     <>
       <PageHero
         eyebrow="Support"
-        title="Talk to a human."
-        lede="Questions, feedback or problems. Tell us what you were trying to do."
+        title="We're here to help."
+        lede="Start with the documentation. If you're still stuck, tell us what you were trying to do."
       />
       <section className="section">
-        <div className="container prose">
-          {settings.supportEmail ? (
-            <>
-              <p>Email us and include what you expected, what happened and your system details.</p>
-              <div className="btn-row" style={{ marginTop: "1.5rem" }}>
-                <ButtonLink href={`mailto:${settings.supportEmail}`} variant="primary">
-                  {settings.supportEmail}
-                </ButtonLink>
-              </div>
-            </>
-          ) : (
-            <p className="notice">A support address will be published here shortly.</p>
-          )}
+        <div className="container grid c2">
+          <div className="card">
+            <h2 className="h3">Documentation</h2>
+            <p>Install, verify, and use STONIC.</p>
+            <div style={{ marginTop: "1.25rem" }}>
+              <ButtonLink href="/documentation">Read the docs</ButtonLink>
+            </div>
+          </div>
+          <div className="card">
+            <h2 className="h3">Contact support</h2>
+            <p>
+              {settings.supportEmail
+                ? `Email ${settings.supportEmail} or use the form.`
+                : "Send us a message and we'll reply by email."}
+            </p>
+            <div style={{ marginTop: "1.25rem" }}>
+              <ButtonLink href="/contact" variant="primary">
+                Contact us
+              </ButtonLink>
+            </div>
+          </div>
+          <div className="card">
+            <h2 className="h3">Downloads</h2>
+            <p>
+              Installers and checksums live on the <Link href="/releases">Releases</Link> page.
+            </p>
+          </div>
         </div>
       </section>
     </>

@@ -9,14 +9,14 @@ export const metadata: Metadata = {
 
 const STEPS = [
   {
-    tag: "Now",
-    title: "Gen 1 — in development",
-    body: "Bringing the control loop, agent system, memory and voice together into the first complete, releasable STONIC.",
+    tag: "Released",
+    title: "STONIC Gen 1",
+    body: "The first complete STONIC: control loop, agents, memory and voice working together as one product.",
   },
   {
-    tag: "Next",
-    title: "Gen 1 release",
-    body: "Public download, real product captures and documentation published together.",
+    tag: "Ongoing",
+    title: "Updates and improvements",
+    body: "Fixes and refinements ship as new versions. Every version, with notes and checksums, is on the Releases page.",
   },
   {
     tag: "Later · Concept",
@@ -31,7 +31,7 @@ export default function Page() {
       <PageHero
         eyebrow="Roadmap"
         title="Where STONIC is going."
-        lede="Stages, not dates. We publish dates only when we can keep them."
+        lede="Where STONIC is today and where it may go next. We publish dates only when we can keep them."
       />
       <section className="section">
         <div className="container grid" style={{ maxWidth: 760 }}>

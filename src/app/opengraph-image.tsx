@@ -24,7 +24,6 @@ export default async function OG() {
       }}
     >
       {}
-      {/* eslint-disable-next-line @next/next/no-img-element -- next/og ImageResponse requires a plain img element */}
       <img src={src} width={760} height={162} alt="" />
       <div style={{ marginTop: 48, fontSize: 40, color: "#c7d2fe", letterSpacing: -1 }}>
         Your computer is about to become intelligent.
