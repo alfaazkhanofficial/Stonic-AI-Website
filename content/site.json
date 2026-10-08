@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-10-08T11:47:43.126Z",
+  "updatedAt": "2026-10-08T11:50:37.373Z",
   "announcement": {
     "enabled": false,
     "text": "",
@@ -20,9 +20,7 @@
     "supportEmail": "alfaazkhan3617@gmail.com",
     "releaseStage": "released"
   },
-  "featuredMedia": [
-    "1000418715-muzh1nyo.jpg"
-  ],
+  "featuredMedia": [],
   "socials": [],
   "legal": {
     "ownerName": "STONIC AI",
