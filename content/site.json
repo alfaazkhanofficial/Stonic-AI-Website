@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-10-08T11:55:34.704Z",
+  "updatedAt": "2026-10-08T11:56:42.056Z",
   "announcement": {
     "enabled": false,
     "text": "",
@@ -18,7 +18,7 @@
   "settings": {
     "siteName": "STONIC AI",
     "supportEmail": "alfaazkhan3617@gmail.com",
-    "releaseStage": "in-development"
+    "releaseStage": "released"
   },
   "featuredMedia": [],
   "socials": [],
